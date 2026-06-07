@@ -1,0 +1,511 @@
+{
+  "name": "Code Summarizer",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "sender": "muhammadrehankhawar157@gmail.com"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -288,
+        64
+      ],
+      "id": "711467da-2ef8-4ce3-99ab-1d51e430a368",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "LaJewnuySWkyUzbV",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "### STEPS\n\n1. Read the code-related email → trigger workflow.\n2. Summarize the code using an LLM.\n3. Generate comments for the code.\n4. Perform Steps 2 and 3 in parallel.\n5. Merge the outputs from Steps 2 and 3.\n6. Send the final output to me via email.\n",
+        "height": 192,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -608,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "79e2dcbf-f3e8-4b95-9f7d-95db8c0653ca",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        128,
+        224
+      ],
+      "id": "563a1259-74b3-4a7a-b07e-479780eb871d",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "xv9AiT94HNoK2Wsm",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Given the code below\nCode:\n {{ $json.text }}\ngenerate comments for the code so that i can understand what each line of code does.\nNOTE: Do not modify the existing code lines at all.\nJust add the comments wherever required.\n",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are a helpful assistant and know how to write code in C++ . You can help me to understand the code by adding comments to it."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        96,
+        48
+      ],
+      "id": "645e8b27-6730-43b2-b0fb-a5d7aef281cb",
+      "name": "Comments_Addition"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        32,
+        -96
+      ],
+      "id": "3d3befce-0aac-48eb-80df-e8d7a09bdf55",
+      "name": "Groq Chat Model1",
+      "credentials": {
+        "groqApi": {
+          "id": "xv9AiT94HNoK2Wsm",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Given the code below\nCode:\n {{ $json.text }}\ngenerate a summary of what this code does in a very simple language. Do note that the summary should contain all the important details there are in the code so that I know what the code is about in a quick glance",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are an expert in C++ code. You have the ability to summarize the code in simple language and have the knack to cover important details in the summary."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -48,
+        -256
+      ],
+      "id": "3f60a80f-40a9-4c9e-8bb8-8912bb5f1bae",
+      "name": "Code_Summary"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        448,
+        -112
+      ],
+      "id": "556ca640-e4b0-4c87-a3d0-6b3f3dfcc4c2",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        656,
+        -112
+      ],
+      "id": "9b50ac89-e529-4e69-83e1-bb8bcc4f94bc",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "sendTo": "muhammadrehankhawar157@gmail.com",
+        "subject": "Code Summary and Comments",
+        "message": "=\n{{ $json.text }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1648,
+        -96
+      ],
+      "id": "819f6eb4-b36f-43fd-9ffc-5b7ff1fd9df9",
+      "name": "Send a message",
+      "webhookId": "f9296c04-d436-4368-b8d2-6415ced32b46",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "LaJewnuySWkyUzbV",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "34b7a4e9-300b-4d53-9c6a-ebb4faed4a95",
+              "name": "Message",
+              "value": "=Code with Comments:\n {{ $json.text[1] }}\n\nCode Summary:\n{{ $json.text[0] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        992,
+        -112
+      ],
+      "id": "1f15cf63-928e-4b72-873a-9f3dc816ee3e",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Convert the Message into html format.\nInclude proper code blocks wherever necessary. The code blocks should have syntax highlighting for the specific language used in the code\n\nMessage:\n\n {{ $json.Message }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You can convert any message into html format that can be sent on mail to the user"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1200,
+        -112
+      ],
+      "id": "a81fbb3b-f491-475a-88b7-81112196cfad",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        128
+      ],
+      "id": "fd40848d-4ffd-4658-851e-dba3cb1739e4",
+      "name": "Groq Chat Model2",
+      "credentials": {
+        "groqApi": {
+          "id": "xv9AiT94HNoK2Wsm",
+          "name": "Groq account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Gmail Trigger": [
+      {
+        "json": {
+          "id": "19e9ca6a2befb8ac",
+          "threadId": "19e9ca672764c246",
+          "labelIds": [
+            "IMPORTANT",
+            "SENT",
+            "INBOX"
+          ],
+          "sizeEstimate": 2655,
+          "headers": {
+            "mime-version": "MIME-Version: 1.0",
+            "date": "Date: Sat, 6 Jun 2026 16:17:03 +0500",
+            "message-id": "Message-ID: <CAHaPwLdGqtNBDW7OBfDi2bKwVHgaEzSMmwPq0h=cQ5V0pBjzNw@mail.gmail.com>",
+            "subject": "Subject: Code",
+            "from": "From: BAIF25M019-MUHAMMAD REHAN KHAWAR <muhammadrehankhawar157@gmail.com>",
+            "to": "To: BAIF25M019-MUHAMMAD REHAN KHAWAR <muhammadrehankhawar157@gmail.com>",
+            "content-type": "Content-Type: multipart/alternative; boundary=\"000000000000ecb420065393ea5f\""
+          },
+          "html": "<div dir=\"ltr\">#include &lt;iostream&gt;<br>#include &lt;cstdlib&gt;<br>#include &lt;ctime&gt;<br><br>using namespace std;<br><br>int main()<br>{<br>    srand(time(0));<br><br>    const int SIZE = 10;<br>    int numbers[SIZE];<br><br>    cout &lt;&lt; &quot;Random Numbers: &quot;;<br><br>    for (int i = 0; i &lt; SIZE; i++)<br>    {<br>        numbers[i] = rand() % 100 + 1; // 1 to 100<br>        cout &lt;&lt; numbers[i] &lt;&lt; &quot; &quot;;<br>    }<br><br>    int largest = numbers[0];<br>    int smallest = numbers[0];<br><br>    for (int i = 1; i &lt; SIZE; i++)<br>    {<br>        if (numbers[i] &gt; largest)<br>            largest = numbers[i];<br><br>        if (numbers[i] &lt; smallest)<br>            smallest = numbers[i];<br>    }<br><br>    cout &lt;&lt; &quot;\\n\\nLargest Number: &quot; &lt;&lt; largest;<br>    cout &lt;&lt; &quot;\\nSmallest Number: &quot; &lt;&lt; smallest &lt;&lt; endl;<br><br>    return 0;<br>}</div>\n",
+          "text": "#include <iostream>\n#include <cstdlib>\n#include <ctime>\n\nusing namespace std;\n\nint main()\n{\n    srand(time(0));\n\n    const int SIZE = 10;\n    int numbers[SIZE];\n\n    cout << \"Random Numbers: \";\n\n    for (int i = 0; i < SIZE; i++)\n    {\n        numbers[i] = rand() % 100 + 1; // 1 to 100\n        cout << numbers[i] << \" \";\n    }\n\n    int largest = numbers[0];\n    int smallest = numbers[0];\n\n    for (int i = 1; i < SIZE; i++)\n    {\n        if (numbers[i] > largest)\n            largest = numbers[i];\n\n        if (numbers[i] < smallest)\n            smallest = numbers[i];\n    }\n\n    cout << \"\\n\\nLargest Number: \" << largest;\n    cout << \"\\nSmallest Number: \" << smallest << endl;\n\n    return 0;\n}\n",
+          "textAsHtml": "<p>#include &lt;iostream&gt;<br/>#include &lt;cstdlib&gt;<br/>#include &lt;ctime&gt;</p><p>using namespace std;</p><p>int main()<br/>{<br/>    srand(time(0));</p><p>    const int SIZE = 10;<br/>    int numbers[SIZE];</p><p>    cout &lt;&lt; &quot;Random Numbers: &quot;;</p><p>    for (int i = 0; i &lt; SIZE; i++)<br/>    {<br/>        numbers[i] = rand() % 100 + 1; // 1 to 100<br/>        cout &lt;&lt; numbers[i] &lt;&lt; &quot; &quot;;<br/>    }</p><p>    int largest = numbers[0];<br/>    int smallest = numbers[0];</p><p>    for (int i = 1; i &lt; SIZE; i++)<br/>    {<br/>        if (numbers[i] &gt; largest)<br/>            largest = numbers[i];</p><p>        if (numbers[i] &lt; smallest)<br/>            smallest = numbers[i];<br/>    }</p><p>    cout &lt;&lt; &quot;\\n\\nLargest Number: &quot; &lt;&lt; largest;<br/>    cout &lt;&lt; &quot;\\nSmallest Number: &quot; &lt;&lt; smallest &lt;&lt; endl;</p><p>    return 0;<br/>}</p>",
+          "subject": "Code",
+          "date": "2026-06-06T11:17:03.000Z",
+          "to": {
+            "value": [
+              {
+                "address": "muhammadrehankhawar157@gmail.com",
+                "name": "BAIF25M019-MUHAMMAD REHAN KHAWAR"
+              }
+            ],
+            "html": "<span class=\"mp_address_group\"><span class=\"mp_address_name\">BAIF25M019-MUHAMMAD REHAN KHAWAR</span> &lt;<a href=\"mailto:muhammadrehankhawar157@gmail.com\" class=\"mp_address_email\">muhammadrehankhawar157@gmail.com</a>&gt;</span>",
+            "text": "\"BAIF25M019-MUHAMMAD REHAN KHAWAR\" <muhammadrehankhawar157@gmail.com>"
+          },
+          "from": {
+            "value": [
+              {
+                "address": "muhammadrehankhawar157@gmail.com",
+                "name": "BAIF25M019-MUHAMMAD REHAN KHAWAR"
+              }
+            ],
+            "html": "<span class=\"mp_address_group\"><span class=\"mp_address_name\">BAIF25M019-MUHAMMAD REHAN KHAWAR</span> &lt;<a href=\"mailto:muhammadrehankhawar157@gmail.com\" class=\"mp_address_email\">muhammadrehankhawar157@gmail.com</a>&gt;</span>",
+            "text": "\"BAIF25M019-MUHAMMAD REHAN KHAWAR\" <muhammadrehankhawar157@gmail.com>"
+          },
+          "messageId": "<CAHaPwLdGqtNBDW7OBfDi2bKwVHgaEzSMmwPq0h=cQ5V0pBjzNw@mail.gmail.com>"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Code_Summary": [
+      {
+        "json": {
+          "text": "**Code Summary:**\n\nThis C++ code generates and displays 10 random numbers between 1 and 100. It then finds and displays the largest and smallest numbers among these generated numbers.\n\n**Key Points:**\n\n* Generates 10 random numbers using the `rand()` function.\n* The random numbers range from 1 to 100.\n* The code uses a loop to compare each number and find the largest and smallest numbers.\n* The largest and smallest numbers are then displayed on the screen.\n\n**Output:**\n\nThe code will display:\n\n* A list of 10 random numbers.\n* The largest number among the generated numbers.\n* The smallest number among the generated numbers.\n\nOverall, this code is a simple example of generating random numbers and finding the maximum and minimum values within a set of numbers."
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Comments_Addition": [
+      {
+        "json": {
+          "text": "```cpp\n// Include the iostream library for input/output operations\n#include <iostream>\n// Include the cstdlib library for standard general-purpose functions\n#include <cstdlib>\n// Include the ctime library for time-related functions\n#include <ctime>\n\n// Use the standard namespace to avoid prefixing standard library elements\nusing namespace std;\n\n// Define the main function where program execution begins\nint main()\n{\n    // Seed the random number generator with the current time\n    srand(time(0));\n\n    // Define a constant integer variable to store the size of the array\n    const int SIZE = 10;\n    // Declare an integer array of size 'SIZE' to store random numbers\n    int numbers[SIZE];\n\n    // Print a message to indicate the start of random number generation\n    cout << \"Random Numbers: \";\n\n    // Use a for loop to generate and store 'SIZE' number of random numbers\n    for (int i = 0; i < SIZE; i++)\n    {\n        // Generate a random number between 1 and 100 and store it in the array\n        numbers[i] = rand() % 100 + 1; // 1 to 100\n        // Print the generated random number\n        cout << numbers[i] << \" \";\n    }\n\n    // Initialize variables to store the largest and smallest numbers with the first array element\n    int largest = numbers[0];\n    int smallest = numbers[0];\n\n    // Use a for loop to iterate through the array and find the largest and smallest numbers\n    for (int i = 1; i < SIZE; i++)\n    {\n        // Check if the current number is larger than the largest number found so far\n        if (numbers[i] > largest)\n            // Update the largest number if the current number is larger\n            largest = numbers[i];\n\n        // Check if the current number is smaller than the smallest number found so far\n        if (numbers[i] < smallest)\n            // Update the smallest number if the current number is smaller\n            smallest = numbers[i];\n    }\n\n    // Print the largest number found in the array\n    cout << \"\\n\\nLargest Number: \" << largest;\n    // Print the smallest number found in the array\n    cout << \"\\nSmallest Number: \" << smallest << endl;\n\n    // Return 0 to indicate successful program execution\n    return 0;\n}\n```"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Merge": [
+      {
+        "json": {
+          "text": "**Code Summary:**\n\nThis C++ code generates and displays 10 random numbers between 1 and 100. It then finds and displays the largest and smallest numbers among these generated numbers.\n\n**Key Points:**\n\n* Generates 10 random numbers using the `rand()` function.\n* The random numbers range from 1 to 100.\n* The code uses a loop to compare each number and find the largest and smallest numbers.\n* The largest and smallest numbers are then displayed on the screen.\n\n**Output:**\n\nThe code will display:\n\n* A list of 10 random numbers.\n* The largest number among the generated numbers.\n* The smallest number among the generated numbers.\n\nOverall, this code is a simple example of generating random numbers and finding the maximum and minimum values within a set of numbers."
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "text": "```cpp\n// Include the iostream library for input/output operations\n#include <iostream>\n// Include the cstdlib library for standard general-purpose functions\n#include <cstdlib>\n// Include the ctime library for time-related functions\n#include <ctime>\n\n// Use the standard namespace to avoid prefixing standard library elements\nusing namespace std;\n\n// Define the main function where program execution begins\nint main()\n{\n    // Seed the random number generator with the current time\n    srand(time(0));\n\n    // Define a constant integer variable to store the size of the array\n    const int SIZE = 10;\n    // Declare an integer array of size 'SIZE' to store random numbers\n    int numbers[SIZE];\n\n    // Print a message to indicate the start of random number generation\n    cout << \"Random Numbers: \";\n\n    // Use a for loop to generate and store 'SIZE' number of random numbers\n    for (int i = 0; i < SIZE; i++)\n    {\n        // Generate a random number between 1 and 100 and store it in the array\n        numbers[i] = rand() % 100 + 1; // 1 to 100\n        // Print the generated random number\n        cout << numbers[i] << \" \";\n    }\n\n    // Initialize variables to store the largest and smallest numbers with the first array element\n    int largest = numbers[0];\n    int smallest = numbers[0];\n\n    // Use a for loop to iterate through the array and find the largest and smallest numbers\n    for (int i = 1; i < SIZE; i++)\n    {\n        // Check if the current number is larger than the largest number found so far\n        if (numbers[i] > largest)\n            // Update the largest number if the current number is larger\n            largest = numbers[i];\n\n        // Check if the current number is smaller than the smallest number found so far\n        if (numbers[i] < smallest)\n            // Update the smallest number if the current number is smaller\n            smallest = numbers[i];\n    }\n\n    // Print the largest number found in the array\n    cout << \"\\n\\nLargest Number: \" << largest;\n    // Print the smallest number found in the array\n    cout << \"\\nSmallest Number: \" << smallest << endl;\n\n    // Return 0 to indicate successful program execution\n    return 0;\n}\n```"
+        },
+        "pairedItem": {
+          "item": 0,
+          "input": 1
+        }
+      }
+    ],
+    "Aggregate": [
+      {
+        "json": {
+          "text": [
+            "**Code Summary:**\n\nThis C++ code generates and displays 10 random numbers between 1 and 100. It then finds and displays the largest and smallest numbers among these generated numbers.\n\n**Key Points:**\n\n* Generates 10 random numbers using the `rand()` function.\n* The random numbers range from 1 to 100.\n* The code uses a loop to compare each number and find the largest and smallest numbers.\n* The largest and smallest numbers are then displayed on the screen.\n\n**Output:**\n\nThe code will display:\n\n* A list of 10 random numbers.\n* The largest number among the generated numbers.\n* The smallest number among the generated numbers.\n\nOverall, this code is a simple example of generating random numbers and finding the maximum and minimum values within a set of numbers.",
+            "```cpp\n// Include the iostream library for input/output operations\n#include <iostream>\n// Include the cstdlib library for standard general-purpose functions\n#include <cstdlib>\n// Include the ctime library for time-related functions\n#include <ctime>\n\n// Use the standard namespace to avoid prefixing standard library elements\nusing namespace std;\n\n// Define the main function where program execution begins\nint main()\n{\n    // Seed the random number generator with the current time\n    srand(time(0));\n\n    // Define a constant integer variable to store the size of the array\n    const int SIZE = 10;\n    // Declare an integer array of size 'SIZE' to store random numbers\n    int numbers[SIZE];\n\n    // Print a message to indicate the start of random number generation\n    cout << \"Random Numbers: \";\n\n    // Use a for loop to generate and store 'SIZE' number of random numbers\n    for (int i = 0; i < SIZE; i++)\n    {\n        // Generate a random number between 1 and 100 and store it in the array\n        numbers[i] = rand() % 100 + 1; // 1 to 100\n        // Print the generated random number\n        cout << numbers[i] << \" \";\n    }\n\n    // Initialize variables to store the largest and smallest numbers with the first array element\n    int largest = numbers[0];\n    int smallest = numbers[0];\n\n    // Use a for loop to iterate through the array and find the largest and smallest numbers\n    for (int i = 1; i < SIZE; i++)\n    {\n        // Check if the current number is larger than the largest number found so far\n        if (numbers[i] > largest)\n            // Update the largest number if the current number is larger\n            largest = numbers[i];\n\n        // Check if the current number is smaller than the smallest number found so far\n        if (numbers[i] < smallest)\n            // Update the smallest number if the current number is smaller\n            smallest = numbers[i];\n    }\n\n    // Print the largest number found in the array\n    cout << \"\\n\\nLargest Number: \" << largest;\n    // Print the smallest number found in the array\n    cout << \"\\nSmallest Number: \" << smallest << endl;\n\n    // Return 0 to indicate successful program execution\n    return 0;\n}\n```"
+          ]
+        },
+        "pairedItem": [
+          {
+            "item": 0
+          },
+          {
+            "item": 1
+          }
+        ]
+      }
+    ],
+    "Edit Fields": [
+      {
+        "json": {
+          "Message": "Code with Comments:\n ```cpp\n// Include the iostream library for input/output operations\n#include <iostream>\n// Include the cstdlib library for standard general-purpose functions\n#include <cstdlib>\n// Include the ctime library for time-related functions\n#include <ctime>\n\n// Use the standard namespace to avoid prefixing standard library elements\nusing namespace std;\n\n// Define the main function where program execution begins\nint main()\n{\n    // Seed the random number generator with the current time\n    srand(time(0));\n\n    // Define a constant integer variable to store the size of the array\n    const int SIZE = 10;\n    // Declare an integer array of size 'SIZE' to store random numbers\n    int numbers[SIZE];\n\n    // Print a message to indicate the start of random number generation\n    cout << \"Random Numbers: \";\n\n    // Use a for loop to generate and store 'SIZE' number of random numbers\n    for (int i = 0; i < SIZE; i++)\n    {\n        // Generate a random number between 1 and 100 and store it in the array\n        numbers[i] = rand() % 100 + 1; // 1 to 100\n        // Print the generated random number\n        cout << numbers[i] << \" \";\n    }\n\n    // Initialize variables to store the largest and smallest numbers with the first array element\n    int largest = numbers[0];\n    int smallest = numbers[0];\n\n    // Use a for loop to iterate through the array and find the largest and smallest numbers\n    for (int i = 1; i < SIZE; i++)\n    {\n        // Check if the current number is larger than the largest number found so far\n        if (numbers[i] > largest)\n            // Update the largest number if the current number is larger\n            largest = numbers[i];\n\n        // Check if the current number is smaller than the smallest number found so far\n        if (numbers[i] < smallest)\n            // Update the smallest number if the current number is smaller\n            smallest = numbers[i];\n    }\n\n    // Print the largest number found in the array\n    cout << \"\\n\\nLargest Number: \" << largest;\n    // Print the smallest number found in the array\n    cout << \"\\nSmallest Number: \" << smallest << endl;\n\n    // Return 0 to indicate successful program execution\n    return 0;\n}\n```\n\nCode Summary:\n**Code Summary:**\n\nThis C++ code generates and displays 10 random numbers between 1 and 100. It then finds and displays the largest and smallest numbers among these generated numbers.\n\n**Key Points:**\n\n* Generates 10 random numbers using the `rand()` function.\n* The random numbers range from 1 to 100.\n* The code uses a loop to compare each number and find the largest and smallest numbers.\n* The largest and smallest numbers are then displayed on the screen.\n\n**Output:**\n\nThe code will display:\n\n* A list of 10 random numbers.\n* The largest number among the generated numbers.\n* The smallest number among the generated numbers.\n\nOverall, this code is a simple example of generating random numbers and finding the maximum and minimum values within a set of numbers."
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code_Summary",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Comments_Addition",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Comments_Addition",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Code_Summary",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Comments_Addition": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Code_Summary": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "2bf8d712-d94b-4bdf-bfb1-b6605ca412cc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a9aa66471b663295917f536deaa06ad1ac3f1c38e468b332b9fccc6c91c0043d"
+  },
+  "nodeGroups": [],
+  "id": "3UzyQHmOpshZxWOp",
+  "tags": []
+}
